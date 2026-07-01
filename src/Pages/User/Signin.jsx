@@ -1,98 +1,102 @@
+
 // import { useState } from "react";
-// import axios, { AxiosError } from "axios";
-// import{useNavigate} from "react-router-dom";
+// import axios from "axios";
+// import { useNavigate } from "react-router-dom";
 // import NavBar from "../../Component/NavBar/NavBar";
-// import { UserProvider, useUser } from "../../Component/Context/Usercontext";
-
-
-
+// import { useUser } from "../../Component/Context/Usercontext";
+// import Footer from "../../Component/Footer/Footer";
 
 // export default function Signin() {
-
 //     const navigate = useNavigate();
-
 //     const [name, setname] = useState("");
 //     const [pass, setpass] = useState("");
-//     const {login} = useUser();
-
+//     const { login } = useUser();
+//     const [Error, setError] = useState("");
+//     const [loading, setloading] = useState(false)
 
 //     const HandelLogin = async (e) => {
 //         e.preventDefault();
 
-//         const User = {
-//             username: name,
-//             password: pass
-
-//         }
-
-//         if(name.trim()){
-//             login(name);   //add to context
-//         }
-
 
 //         try {
-
-//             const response = await axios.post("http://localhost:8080/users/login", User);
+//             setloading(true)
+//             const response = await axios.post("http://localhost:8080/users/login", {
+//                 username: name,
+//                 password: pass
+//             });
 
 //             if (response.status === 200) {
-//                 alert(response.data) 
+//                 const data = response.data;
+//                 setloading(false)
 
-//                 if(response.data === "Login Successfully"){
-//                     navigate("/Home")
+//                 if (!data.role || !data.username) {
+//                     alert("Invalid Username or Password!");
+//                     return;
 //                 }
 
-//             } else {
-//                 alert(response.data)
+//                 login(data.username, data.role);
+//                 localStorage.setItem("role", data.role)
+//                 localStorage.setItem("userid", data.userid)
+
+//                 // ✅ role based redirect
+//                 if (data.role === "Admin") {
+
+//                     if (data.theatreid !== null) {
+//                         localStorage.setItem("theatreid", data.theatreid);
+//                         localStorage.setItem("theatrename", data.theatrename); // ✅
+
+//                         navigate("/DashBoard");       // old admin ✅
+//                     } else {
+
+//                         navigate("/addtheatre");      // new admin ✅
+//                     }
+//                 } else {
+//                     navigate("/home");                // user ✅
+//                 }
 //             }
 
+//         } catch (errors) {
+//             setError(errors.response?.data?.message)
+//             setloading(false)
 //         }
-//         catch (errors) {
-//             alert(errors);
-
-//         }
-
-
 //     }
-
-
-
 
 
 //     return <>
 
-//     <NavBar/>
+//         <div className="loading">
+//             {loading && <p>Loading........</p>}
+//         </div>
+//         <div className="Error-PopUp">
+//             {Error && <h6>{Error}</h6> }
+//         </div>
 
 //         <div className="login-container">
 //             <h1>LOGIN NOW</h1>
 //             <div className="login-box">
-
 //                 <form onSubmit={HandelLogin}>
-
 //                     <div className="login-details">
-//                         <input type="text" name="user" placeholder=" " onChange={(e) => { setname(e.target.value) }} />
-//                         <label> <i class="fa-regular fa-user"></i>UserName</label>
+//                         <input type="text" name="user" placeholder="" required
+//                             onChange={(e) => { setname(e.target.value) }} />
+//                         <label><i className="fa-regular fa-user"></i>UserName</label>
 //                     </div>
-
 //                     <div className="login-details">
-//                         <input type="password" name="pass" placeholder=" " onChange={(e) => { setpass(e.target.value) }} />
-//                         <label> <i class="fa-solid fa-lock"></i> Password</label>
+//                         <input type="password" name="pass" placeholder="" required
+//                             onChange={(e) => { setpass(e.target.value) }} />
+//                         <label><i className="fa-solid fa-lock"></i>Password</label>
 //                     </div>
-
 //                     <div className="login-details">
-//                         <button type="submite">Sign In</button>
+//                         <button type="submit">Sign In</button>  {/* ✅ fixed typo */}
 //                     </div>
-
 //                     <div className="login-details">
-//                         <h6>Don't Have An Account? <p onClick={()=>{navigate("/signup")}}>SignUp</p> </h6>
+//                         <h6>Don't Have An Account?
+//                             <p onClick={() => { navigate("/signup") }}>SignUp</p>
+//                         </h6>
 //                     </div>
-
 //                 </form>
-
 //             </div>
 //         </div>
-
-
-
+//         <Footer />
 //     </>
 // }
 
@@ -101,31 +105,39 @@
 
 
 
-
-
-
-
-
-
-
-
-import { useState } from "react";
+import { useState ,useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../Component/NavBar/NavBar";
 import { useUser } from "../../Component/Context/Usercontext";
 import Footer from "../../Component/Footer/Footer";
+import Loading from "../../Component/Loading/Loading";
+
 
 export default function Signin() {
     const navigate = useNavigate();
     const [name, setname] = useState("");
     const [pass, setpass] = useState("");
     const { login } = useUser();
+    const [Error, setError] = useState("");
+    const [loading, setloading] = useState(false);
+
+
+        useEffect(() => {
+        if (Error) {
+            const timer = setTimeout(() => {
+                setError("");
+            }, 5000);
+            return () => clearTimeout(timer); // cleanup if Error changes again before 5s
+        }
+    }, [Error]);
+
 
     const HandelLogin = async (e) => {
         e.preventDefault();
-
+        setError("");
         try {
+            setloading(true);
             const response = await axios.post("http://localhost:8080/users/login", {
                 username: name,
                 password: pass
@@ -135,53 +147,64 @@ export default function Signin() {
                 const data = response.data;
 
                 if (!data.role || !data.username) {
-                    alert("Invalid Username or Password!");
-                    return;  // ✅ stop here — don't navigate
+                    setError("Invalid Username or Password!");
+                    return;
                 }
-                
+
                 login(data.username, data.role);
-                localStorage.setItem("role", data.role)
-                localStorage.setItem("userid", data.userid)
+                localStorage.setItem("role", data.role);
+                localStorage.setItem("userid", data.userid);
+                localStorage.setItem("username",data.username)
 
-                // ✅ role based redirect
                 if (data.role === "Admin") {
-
                     if (data.theatreid !== null) {
                         localStorage.setItem("theatreid", data.theatreid);
-                        localStorage.setItem("theatrename", data.theatrename); // ✅
-
-                        navigate("/DashBoard");       // old admin ✅
+                        localStorage.setItem("theatrename", data.theatrename);
+                        navigate("/DashBoard");
                     } else {
-
-                        navigate("/addtheatre");      // new admin ✅
+                        navigate("/addtheatre");
                     }
                 } else {
-                    navigate("/home");                // user ✅
+                    navigate("/home");
                 }
             }
-
         } catch (errors) {
-            alert(errors.response?.data || "Login failed");
+            setError(errors.response?.data?.message || "Something went wrong. Please try again.");
+        } finally {
+            setloading(false);
         }
-    }
+    };
 
     return <>
+
+        {loading && (
+           <Loading/>
+        )}
+        {Error && (
+            <div className="Error-PopUp">
+                <h6>{Error}</h6>
+            </div>
+        )}
+
+
         <div className="login-container">
             <h1>LOGIN NOW</h1>
             <div className="login-box">
                 <form onSubmit={HandelLogin}>
                     <div className="login-details">
-                        <input type="text" name="user" placeholder=" "
+                        <input type="text" name="user" placeholder="" required
                             onChange={(e) => { setname(e.target.value) }} />
                         <label><i className="fa-regular fa-user"></i>UserName</label>
                     </div>
                     <div className="login-details">
-                        <input type="password" name="pass" placeholder=" "
+                        <input type="password" name="pass" placeholder="" required
                             onChange={(e) => { setpass(e.target.value) }} />
                         <label><i className="fa-solid fa-lock"></i>Password</label>
                     </div>
                     <div className="login-details">
-                        <button type="submit">Sign In</button>  {/* ✅ fixed typo */}
+                        <button type="submit" disabled={loading}>
+                            {loading ? "Signing In..." : "Sign In"}
+                        </button>
                     </div>
                     <div className="login-details">
                         <h6>Don't Have An Account?
@@ -191,6 +214,6 @@ export default function Signin() {
                 </form>
             </div>
         </div>
-        <Footer/>
-    </>
+        <Footer />
+    </>;
 }

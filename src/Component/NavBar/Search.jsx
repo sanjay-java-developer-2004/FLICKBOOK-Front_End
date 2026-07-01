@@ -13,6 +13,7 @@ export default function Search() {
 
 
     const HandelSearch = async () => {
+        seterrormsg("")
 
         console.log(searchkey)
 
@@ -27,12 +28,12 @@ export default function Search() {
 
                 setmoviedata(res.data.movies || []);
                 settheatredata(res.data.theatres || []);
-                seterrormsg(res.data.message);
                 setsearchkey("")
 
             })
             .catch((err) => {
                 console.error(err)
+                seterrormsg(err.response?.data?.message)
                 setsearchkey("")
             })
 
@@ -146,17 +147,6 @@ export default function Search() {
                                     width="120"
                                 />
 
-                                {/* <h3>{movieName}</h3>
-                                 <h4>{shows[0].showdate}</h4>
-                                {shows.map((show) => (
-
-                                    <div key={show.showid}>
-                                       
-                                        <button>{show.showtime}</button>
-
-                                    </div>
-
-                                ))} */}
 
                                 {/* Stacked block for name and date */}
                                 <div className="movie-info-block">

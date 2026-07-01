@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState ,useEffect } from "react";
 import axios, { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../Component/NavBar/NavBar";
 import Footer from "../../Component/Footer/Footer";
+import Loading from "../../Component/Loading/Loading";
 
 
 export default function Signup() {
@@ -13,6 +14,20 @@ export default function Signup() {
     const [mail, setemail] = useState("");
     const [number, setphonenumber] = useState("");
     const [role, setrole] = useState("");
+    const [Error, setError] = useState("");
+    const [loading, setloading] = useState(false);
+
+
+    useEffect(() => {
+        if (Error) {
+            const timer = setTimeout(() => {
+                setError("");
+            }, 5000);
+            return () => clearTimeout(timer); // cleanup if Error changes again before 5s
+        }
+    }, [Error]);
+
+
 
 
     const HandelLogin = async (e) => {
@@ -28,13 +43,14 @@ export default function Signup() {
         }
 
         try {
+            setloading(true)
 
             const response = await axios.post("http://localhost:8080/users/register", User);
 
             if (response.status === 200) {
-                
+
                 const data = response.data
-                if(!data.role || !data.username || !data.userid){
+                if (!data.role || !data.username || !data.userid) {
                     console.log("user name alresdcondain ")
                     alert("UserName Is Already Contain Try Different Username")
                     return
@@ -53,11 +69,13 @@ export default function Signup() {
 
 
         }
-        catch(errors) {
+        catch (errors) {
             console.log(errors)
-            console.log("bewfidcnicnsoinojd")
-            alert(errors || "Something went wrong");
+            setError(errors.response?.data?.message || "Something went wrong. Please try again.");
 
+
+        } finally {
+            setloading(false)
         }
 
     }
@@ -68,6 +86,14 @@ export default function Signup() {
 
     return <>
 
+ {loading && (
+           <Loading/>
+        )}
+        {Error && (
+            <div className="Error-PopUp">
+                <h6>{Error}</h6>
+            </div>
+        )}
 
         <div className="login-container">
             <h1>SIGNUP NOW</h1>
@@ -121,6 +147,6 @@ export default function Signup() {
 
             </div>
         </div>
- <Footer/>
+        <Footer />
     </>
 }

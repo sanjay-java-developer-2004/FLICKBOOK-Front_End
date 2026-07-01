@@ -3,24 +3,32 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Footer from "../../Component/Footer/Footer";
 import NavBar from "../../Component/NavBar/NavBar";
+import Loading from "../../Component/Loading/Loading";
 
 
 export default function TicketView() {
     const navigate = useNavigate();
     const { TicketId } = useParams();
     const [TicketData, SetTicketData] = useState();
+    const [loading, setloading] = useState(false)
+    const [err, seterr] = useState("")
 
 
 
 
     useEffect(() => {
+        setloading(true)
+        seterr("")
         axios.get(`http://localhost:8080/Tickets/getticket/${TicketId}`)
             .then((res) => {
                 SetTicketData(res.data)
             })
             .catch((err) => {
                 console.log(err)
-                alert("Server Error")
+                seterr(err.response?.data?.message)
+            })
+            .finally(() => {
+                setloading(false)
             })
     }, [TicketId])
 
@@ -32,6 +40,14 @@ export default function TicketView() {
     }
     return <>
         <NavBar />
+        {loading && (
+            <Loading />
+        )}
+        {err && (
+            <div className="Error-PopUp">
+                <h6>{err}</h6>
+            </div>
+        )}
 
         <div className="tickets-container">
             <div className="tickets-box">
@@ -46,9 +62,9 @@ export default function TicketView() {
                         <div className="ticket-sub-header">
 
                             <div className="ticket-img">
-                                {TicketData?.Poster && ( 
-                                     <img src={`data:${TicketData?.ImgType};base64,${TicketData?.Poster}`} alt={TicketData?.Tittle} />)}
-                              
+                                {TicketData?.Poster && (
+                                    <img src={`data:${TicketData?.ImgType};base64,${TicketData?.Poster}`} alt={TicketData?.Tittle} />)}
+
                             </div>
 
                             <div className="ticket-tittle">

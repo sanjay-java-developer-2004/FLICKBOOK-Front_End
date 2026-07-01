@@ -4,10 +4,13 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Footer from "../../Component/Footer/Footer";
+import Loading from "../../Component/Loading/Loading";
 
 export default function Seats() {
     const { showid } = useParams();
     const navigate = useNavigate();
+    const [err, seterr] = useState("");
+    const [loading, setloading] = useState(false)
 
     const [seats, setseats] = useState([]);
 
@@ -17,7 +20,7 @@ export default function Seats() {
     const theatreName = seats[0]?.theatreName;
     const showTime = seats[0]?.showTime;
     const price = seats[0]?.price;
-    const movieId = seats[0]?.movieId ;
+    const movieId = seats[0]?.movieId;
 
     // group by row
     const groupedSeats = seats.reduce((acc, seat) => {
@@ -27,22 +30,37 @@ export default function Seats() {
         return acc;
     }, {});
 
+
+    useEffect(() => {
+        if (err) {
+            const timer = setTimeout(() => {
+                seterr("");
+            }, 5000);
+            return () => clearTimeout(timer); // cleanup if Error changes again before 5s
+        }
+    }, [err]);
+
     // fetch seats
     useEffect(() => {
-        axios
-            .get(`http://localhost:8080/seats/seat/${showid}`)
+        seterr("")
+        setloading(true)
+
+        axios.get(`http://localhost:8080/seats/seat/${showid}`)
             .then((res) => setseats(res.data))
             .catch((err) => {
                 console.error(err);
-                alert("Server Error");
-            });
+                seterr(err.response?.data?.message)
+            })
+            .finally(() => {
+                setloading(false)
+            })
     }, [showid]);
 
 
 
-    
+
     const formatTime = (Time) => {
-           if (!Time) return "";
+        if (!Time) return "";
 
         const [hours, minutes] = Time.split(":");
 
@@ -56,7 +74,7 @@ export default function Seats() {
             hour12: true,
         });
     };
-  
+
 
 
 
@@ -123,11 +141,21 @@ export default function Seats() {
         });
     };
 
-    return<>
-    <NavBar/>
-     (
-        
-        
+    return <>
+        {loading && (
+            <Loading />
+        )}
+
+        {err && (
+            <div className="Error-PopUp">
+                <h6>{err}</h6>
+            </div>
+        )}
+
+        <NavBar />
+        (
+
+
         <div className="seat-container">
             <div className="seat-header">
 
@@ -183,7 +211,7 @@ export default function Seats() {
 
             </div>
         </div>
-    );
-    <Footer/>
+        );
+        <Footer />
     </>
 }

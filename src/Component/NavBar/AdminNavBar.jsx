@@ -4,13 +4,15 @@ import { useUser } from "../Context/Usercontext";
 
 export default function AdminNavBar() {
     const navigate = useNavigate();
-    const { username, logout } = useUser();
+    const { logout } = useUser();
 
     const handleLogout = () => {
         logout();
         localStorage.clear();
         navigate("/signin");
     };
+
+    const  username = localStorage.getItem("username")
 
     return (
         <nav className="admin-nav">

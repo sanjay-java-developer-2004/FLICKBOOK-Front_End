@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { Chart, ArcElement, DoughnutController, BarController, BarElement, CategoryScale, LinearScale, Tooltip } from "chart.js";
 import AdminNavBar from "../../Component/NavBar/AdminNavBar";
 import AdminFooter from "../../Component/Footer/AdminFooter";
+import Loading from "../../Component/Loading/Loading";
 
 
 Chart.register(ArcElement, DoughnutController, BarController, BarElement, CategoryScale, LinearScale, Tooltip);
@@ -164,33 +165,37 @@ function ShowCard({ show, index }) {
 export default function DashBoard() {
   const theatreid = localStorage.getItem("theatreid");
   const [Dashboarddatas, setdashboarddatas] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [err, seterr] = useState("")
 
   useEffect(() => {
+    seterr("")
+    setLoading(true)
     axios.get(`http://localhost:8080/authControll/Dashboard/${theatreid}`)
       .then((res) => {
         console.log(res.data);
         setdashboarddatas(res.data);
-        setLoading(false);
       })
       .catch((err) => {
         console.log(err);
-        alert(err);
-        setLoading(false);
-      });
+        seterr(err.response?.data?.message)
+    
+      })
+      .finally(()=>{
+        setLoading(false)
+      })
   }, []);
 
-  if (loading) return <div className="dashboard-status">Loading...</div>;
-
-  if (!Dashboarddatas || Dashboarddatas.length === 0) {
-    return <div className="dashboard-status">Something wrong — no data found.</div>;
-  }
 
   return <>
-  
-  <AdminNavBar/>
+   
+    <AdminNavBar />
+
+     {loading && <Loading />}
+    
     <div className="dashboard-container">
       <h2 className="dashboard-title">Theatre Dashboard</h2>
+       {err && <h6>{err}</h6>}
       <div className="dashboard">
         {Dashboarddatas.map((show, index) => (
           <ShowCard key={index} show={show} index={index + 1} />
@@ -198,6 +203,6 @@ export default function DashBoard() {
       </div>
     </div>
 
-    <AdminFooter/>
- </>
+    <AdminFooter />
+  </>
 }

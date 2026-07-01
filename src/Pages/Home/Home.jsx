@@ -5,6 +5,7 @@ import NavBar from "../../Component/NavBar/NavBar";
 import { useContext } from "react";
 import { useUser } from "../../Component/Context/Usercontext";
 import Footer from "../../Component/Footer/Footer";
+import Loading from "../../Component/Loading/Loading";
 
 
 const Locationcontex = createContext(null);
@@ -27,9 +28,7 @@ const Location = function Location() {
 
 
     return <>
-     <div className="name">
-        <h2>Welcome {username}</h2>
-     </div>
+    
         <div className="location-container">
 
             <div className="locations" style={{display:isvisible? "block" : "none"}}>
@@ -62,9 +61,13 @@ const LatestMovies = function Latest() {
     const [latestdata, setlatestData] = useState([]);
     const [message, setmessage] = useState("")
     const{location} = useContext(Locationcontex);
+    const [err,seterr]= useState("");
+    const [loading,setloading] = useState(false);
 
     useEffect(() => {
 
+        seterr("")
+        setloading(true)
         axios.get(`http://localhost:8080/home/latestmovies/${location}`)
 
             .then((res) => {
@@ -79,8 +82,12 @@ const LatestMovies = function Latest() {
             })
             .catch((err) => {
                 console.log("LatestRelease")
-                console.log(err.message);
+                console.log(err.response?.data?.message);
+                seterr(err.response?.data?.message)
 
+            })
+            .finally(()=>{
+                setloading(false)
             });
 
 
@@ -89,17 +96,20 @@ const LatestMovies = function Latest() {
 
 
     return <>
+
         <div className="latest-movies-container">
 
             <div className="latest-movies-header">
                 <h2>Latest Movies </h2>
                 <i class="fa-solid fa-arrow-right"></i>
             </div>
-            <h3>{message}</h3>
+            {loading && <h3>Loading....</h3>}
+           {!loading && message && <h3>{message}</h3>}
+           {!loading && err && <h3>{err}</h3>}
 
             <div className="latest-movies-box">
 
-                {latestdata.map((x, index) => (
+                {!loading && latestdata.map((x, index) => (
                     <div key={x.movieid || index} className="latest-movie" >
 
                         <img src={`data:${x.imgtype};base64,${x.imgdata}`}
@@ -150,8 +160,12 @@ const CoomingSoon = function CoomingSoon() {
     const [comming, setcomming] = useState([])
     const [mesage, setmessage] = useState("")
     const{location} = useContext(Locationcontex);
+    const[err,seterr] = useState("")
+    const[loading,setloading] = useState(false)
 
     useEffect(() => {
+        seterr("")
+        setloading(true)
         axios.get(`http://localhost:8080/home/commingsoon/${location}`)
 
             .then((res) => {
@@ -170,8 +184,12 @@ const CoomingSoon = function CoomingSoon() {
             })
 
             .catch((err) => {
-                console.log(err.message);
+                console.log(err.response?.data?.message)
                 console.log("CommingSoon")
+                seterr(err.response?.data?.message)
+            })
+            .finally(()=>{
+                setloading(false)
             })
 
     }, [location])
@@ -184,11 +202,13 @@ const CoomingSoon = function CoomingSoon() {
                 <h2>Comming Soon </h2>
                 <i class="fa-solid fa-arrow-right"></i>
             </div>
-            <h3>{mesage}</h3>
+            {loading && <h3>Loading....</h3>}
+            {!loading && mesage && <h3>{mesage}</h3>}
+            {!loading && err && <h3>{err}</h3>}
 
             <div className="latest-movies-box">
 
-                {comming.map((x, index) => (
+                {!Loading && comming.map((x, index) => (
 
                     <div key={x.movieid || index} className="latest-movie">
 
